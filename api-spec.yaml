@@ -1,0 +1,285 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Heroku-Salesforce API
+  description: Sample Heroku app exposing APIs to connected Salesforce and Data Cloud orgs.
+servers:
+  - url: http://127.0.0.1:3000
+paths:
+  /accounts:
+    get:
+      operationId: GetAccounts
+      description: Returns array of Accounts
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'MyAppLinkConnectedApp'
+            permissionSet: 'MyAppLinkPermSet'
+      responses:
+        '200':
+          description: Successfully returned a list of Accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+  /account:
+    post:
+      operationId: GetAccount
+      description: Returns Account for given ID or, if no ID, array of all Accounts
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'MyAppLinkConnectedApp'
+            permissionSet: 'MyAppLinkPermSet'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountsRequest'
+      responses:
+        '200':
+          description: Successfully returned a list of Accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountsResponse'
+  /askHerokuAIAgentForLatestNews:
+    post:
+      operationId: AskHerokuAIAgentForLatestNews
+      description: Returns latest news for given Account name
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LatestNewsRequest'
+      responses:
+        '200':
+          description: Successfully returned latest news for Account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LatestNewsResponse'
+  /askHerokuAIAgentToSummarizeCarReview:
+    post:
+      operationId: AskHerokuAIAgentToSummarizeCarReview
+      description: Returns summarized review on given car
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarReviewRequest'
+      responses:
+        '200':
+          description: Successfully summarized review on given car
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarReviewResponse'
+  /askHerokuAIAgentToSummarizePDF:
+    post:
+      operationId: AskHerokuAIAgentToSummarizePDF
+      description: Summarize given PDF URL in given number of words
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SummarizePDFRequest'
+      responses:
+        '200':
+          description: Successfully returned summarized PDF
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummarizePDFResponse'
+  /generatePDF:
+    post:
+      operationId: GeneratePDF
+      description: Generate PDF for given website.  Saves PDF ContentVersion to invoking
+        org and given FirstPublishLocationId.  For example, if FirstPublishLocationId is
+        a UserId, the version is first published into a user's personal library.
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'MyAppLinkConnectedApp'
+            permissionSet: 'MyAppLinkPermSet'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  description: Filename of ContentVersion.
+                url:
+                  type: string
+                  description: URL of website to render to PDF.
+                  default: 'https://www.google.com'
+                firstPublishLocationId:
+                  type: string
+                  description: ID of the location where the version was first published.
+                    If the version is first published into a user's personal library or
+                    My Files, the field will contain the ID of the user who owns the
+                    personal library or My Files. In Lightning Experience, if the first
+                    version is published into a public library, the field will contain
+                    the ID of that library. Accepts all record IDs supported by
+                    ContentDocumentLink (anything a file can be attached to, like records
+                    and groups).
+                    Defaults to invoking UserId.
+      responses:
+        '200':
+          description: Successfully generate PDF
+  /generateFinanceAgreementPDF:
+    post:
+      operationId: GenerateFinanceAgreementPDF
+      description: Generates Finance Agreement PDF
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'MyAppLinkConnectedApp'
+            permissionSet: 'MyAppLinkPermSet'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateFinanceAgreementPDFRequest'
+      responses:
+        '200':
+          description: Response containing a URL to the PDF or, if not a URL, error message.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateFinanceAgreementPDFResponse'
+  /unitofwork:
+    post:
+      operationId: UnitOfWork
+      description:
+        Receives a payload containing Account, Contact, and Case details and uses the
+        Unit of Work pattern to assign the corresponding values to to its Record
+        while maintaining the relationships. It then commits the unit of work and
+        returns the Record Id's for each object.
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'MyAppLinkConnectedApp'
+            permissionSet: 'MyAppLinkPermSet'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountName:
+                  type: string
+                lastName:
+                  type: string
+                subject:
+                  type: string
+                callbackUrl:
+                  type: string
+      responses:
+        '201':
+          description: Received UnitOfWork API request
+      callbacks:
+        unitOfWorkResponse:
+          '{$request.body#/callbackUrl}':
+            post:
+              description: Response from /unitofwork API
+              operationId: unitOfWorkResponseCallback
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        accountId:
+                          type: string
+                        contactId:
+                          type: string
+                        cases:
+                          type: object
+                          properties:
+                            serviceCaseId:
+                              type: string
+                            followupCaseId:
+                              type: string
+              responses: # Expected responses to the callback message
+                '200':
+                  description: Your server returns this code if it accepts the callback
+components:
+  schemas:
+    AccountsRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: An Account record ID
+    AccountsResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+    GenerateFinanceAgreementPDFRequest:
+      type: object
+      properties:
+        details:
+          type: string
+          description: Details of agreement
+    GenerateFinanceAgreementPDFResponse:
+      type: object
+      properties:
+        content:
+          type: string
+          description: URL to the PDF or, if not a URL, error message.
+    CarReviewRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Request to a review of given car.  Year, make, model of car
+    CarReviewResponse:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Car review response
+    LatestNewsRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of Account
+    LatestNewsResponse:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Latest news for given Account
+    SummarizePDFRequest:
+      type: object
+      properties:
+        numOfWords:
+          type: number
+          description: Number of words
+        pdfUrl:
+          type: string
+          description: URL of PDF
+    SummarizePDFResponse:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Summary of PDF

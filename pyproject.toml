@@ -1,0 +1,15 @@
+[project]
+name = "python_sample_app"
+version = "0.0.1"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi==0.115.12",
+    "uvicorn==0.34.3",
+    "aiohttp==3.12.12",
+    "heroku_applink>=0.0.0",
+    "pytest==8.4.0",
+    "pytest-asyncio==1.0.0",
+    "requests==2.32.4"
+]
