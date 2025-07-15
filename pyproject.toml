@@ -1,7 +1,7 @@
 [project]
-name = "python_sample_app"
+name = "AppLink Getting Started Python"
 version = "0.0.1"
-description = "Add your description here"
+description = "A getting started guide for using Heroku AppLink in Python."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
