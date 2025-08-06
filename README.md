@@ -89,7 +89,7 @@ The `bin/invoke.py` script allows you to test your locally running, protected AP
 To get the required Salesforce credentials for testing:
 
 1.  **Access Token**: Use Salesforce CLI to generate a session token (`sf org display --target-org <alias> --json | jq .result.accessToken -r`).
-2.  **Org ID**: Found in Setup → Company Information or by running `sf org display --target-org <alias> --json | jq .result.id -r`.
+2.  **Org ID**: Found in Setup → Company Information or by running `sf org a display --target-org <alias> --json | jq .result.id -r`.
 3.  **User ID**: Found in your user profile or Setup → Users or by running `sf org display --target-org <alias> --json | jq .result.userId -r`.
 
 ## Running Automated Tests
@@ -111,12 +111,10 @@ pytest
 ### 2. Create Heroku App
 
 ```bash
-# Create a new Heroku app
-heroku create your-app-name
-
-# Or let Heroku generate a name
+# Let Heroku generate a name for your app
 heroku create
 ```
+Heroku will respond with the unique name for your new application (e.g., `salty-sierra-55555`). **Take note of this app name, as you will need it in later steps.**
 
 ### 3. Add Required Buildpacks
 
@@ -134,11 +132,9 @@ heroku buildpacks:add heroku/python
 
 ```bash
 # Provision the Heroku AppLink add-on
-heroku addons:create heroku-applink
-
-# Set the required HEROKU_APP_ID config var
-heroku config:set HEROKU_APP_ID="$(heroku apps:info --json | jq -r '.app.id')"
+heroku addons:create heroku-applink --app YOUR_APP_NAME
 ```
+Heroku will provision the add-on and give it a unique name (e.g., `applink-slippery-54321`). **You will need this name in the setup steps below.** If you forget it, you can find it by running `heroku addons`.
 
 ### 5. Deploy the Application
 
@@ -160,6 +156,8 @@ heroku logs --tail
 
 ## Heroku AppLink Setup
 
+In the following steps, you will need the **Heroku app name** (from step 2) and the **AppLink add-on name** (from step 4).
+
 ### 1. Install AppLink CLI Plugin
 
 ```bash
@@ -169,34 +167,47 @@ heroku plugins:install @heroku-cli/plugin-applink
 
 ### 2. Connect to Salesforce Org
 
-```bash
-# Connect to a production org (replace your-addon-name and your-app-name)
-heroku salesforce:connect production-org --addon your-addon-name -a your-app-name
+This command securely connects your app to Salesforce. The `CONNECTION_NAME` is a friendly name **that you define yourself** to identify this link. You will reuse this name in the `publish` step.
 
-# Connect to a sandbox org
-heroku salesforce:connect sandbox-org --addon your-addon-name -a your-app-name --login-url https://test.salesforce.com
+```bash
+# For a production or developer org. Replace CONNECTION_NAME with a name of your choice (e.g., "production_org").
+heroku salesforce:connect CONNECTION_NAME --addon YOUR_ADDON_NAME -a YOUR_APP_NAME
+
+# For a sandbox org
+heroku salesforce:connect CONNECTION_NAME --addon YOUR_ADDON_NAME -a YOUR_APP_NAME --login-url https://test.salesforce.com
 ```
+This will open a browser for you to log in to Salesforce and approve the connection.
 
 ### 3. Authorize a User
 
 ```bash
 # Authorize a Salesforce user for API access
-heroku salesforce:authorizations:add auth-user --addon your-addon-name -a your-app-name
+heroku salesforce:authorizations:add auth-user --addon YOUR_ADDON_NAME -a YOUR_APP_NAME
 ```
 
 ### 4. Publish Your App
+
+This final step publishes your API to Salesforce and creates the necessary components.
 
 ```bash
 # Publish the app to Salesforce as an External Service
 heroku salesforce:publish api-spec.yaml \
   --client-name MyAPI \
-  --connection-name production-org \
-  --authorization-connected-app-name MyAppConnectedApp \
-  --authorization-permission-set-name MyAppPermissions \
-  --addon your-addon-name
+  --connection-name CONNECTION_NAME \
+  --authorization-connected-app-name MyAppLinkConnectedApp \
+  --authorization-permission-set-name MyAppLinkPermSet \
+  --addon YOUR_ADDON_NAME
 ```
 
+**Parameter Breakdown:**
+- `--client-name`: The name for the External Service and its generated Apex classes (e.g., `MyAPI`).
+- `--connection-name`: The friendly name you gave the AppLink connection in the previous step (e.g., `production_org`).
+- `--authorization-connected-app-name`: The name for the **new** Connected App that Heroku will create. **Note:** This value must match the `connectedApp` value defined in `api-spec.yaml`.
+- `--authorization-permission-set-name`: The name for the **new** Permission Set that Heroku will create. **Note:** This value must match the `permissionSet` value defined in `api-spec.yaml`.
+- `--addon`: The unique name of your AppLink add-on (e.g., `applink-slippery-54321`).
+
 ### 5. Required Salesforce Permissions
+
 Users need the "Manage Heroku AppLink" permission in Salesforce:
 1.  Go to Setup → Permission Sets
 2.  Create a new permission set or edit an existing one
