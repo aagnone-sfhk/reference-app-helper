@@ -2,7 +2,7 @@
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/heroku-reference-apps/applink-getting-started-python)
 
-The Heroku AppLink Python app template is a [FastAPI](https://fastapi.tiangolo.com/) web application that demonstrates how to build APIs for Salesforce integration using Heroku AppLink. This template includes authentication, authorization, and API specifications for seamless integration with Salesforce, Data Cloud, and Agentforce.
+The Heroku AppLink Python app template is a [FastAPI](https://fastapi.tiangolo.com/) web application that demonstrates how to build APIs for Salesforce integration using Heroku AppLink. This template includes authentication, authorization, and API specifications for seamless integration with Salesforce and Data Cloud.
 
 ## Table of Contents
 
@@ -12,8 +12,6 @@ The Heroku AppLink Python app template is a [FastAPI](https://fastapi.tiangolo.c
 - [Running Automated Tests](#running-automated-tests)
 - [Manual Heroku Deployment](#manual-heroku-deployment)
 - [Heroku AppLink Setup](#heroku-applink-setup)
-- [Project Structure](#project-structure)
-- [API Documentation](#api-documentation)
 - [Additional Resources](#additional-resources)
 
 ## Quick Start
@@ -104,11 +102,106 @@ pytest
 
 ## Manual Heroku Deployment
 
-(Instructions for `heroku create`, buildpacks, add-ons, and deployment are unchanged.)
+### 1. Prerequisites
+
+- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) installed
+- Git repository initialized
+- Heroku account with billing enabled (for add-ons)
+
+### 2. Create Heroku App
+
+```bash
+# Create a new Heroku app
+heroku create your-app-name
+
+# Or let Heroku generate a name
+heroku create
+```
+
+### 3. Add Required Buildpacks
+
+The app requires two buildpacks in the correct order:
+
+```bash
+# Add the AppLink Service Mesh buildpack first
+heroku buildpacks:add heroku/heroku-applink-service-mesh
+
+# Add the Python buildpack second
+heroku buildpacks:add heroku/python
+```
+
+### 4. Provision the AppLink Add-on
+
+```bash
+# Provision the Heroku AppLink add-on
+heroku addons:create heroku-applink
+
+# Set the required HEROKU_APP_ID config var
+heroku config:set HEROKU_APP_ID="$(heroku apps:info --json | jq -r '.app.id')"
+```
+
+### 5. Deploy the Application
+
+```bash
+# Deploy to Heroku
+git push heroku main
+
+# Check deployment status
+heroku ps:scale web=1
+heroku open
+```
+
+### 6. Verify Deployment
+
+```bash
+# Check app logs
+heroku logs --tail
+```
 
 ## Heroku AppLink Setup
 
-(Instructions for `heroku salesforce:connect`, `heroku salesforce:authorizations:add`, and `heroku salesforce:publish` are identical to the Node.js version and can be referenced from the official documentation.)
+### 1. Install AppLink CLI Plugin
+
+```bash
+# Install the AppLink CLI plugin
+heroku plugins:install @heroku-cli/plugin-applink
+```
+
+### 2. Connect to Salesforce Org
+
+```bash
+# Connect to a production org (replace your-addon-name and your-app-name)
+heroku salesforce:connect production-org --addon your-addon-name -a your-app-name
+
+# Connect to a sandbox org
+heroku salesforce:connect sandbox-org --addon your-addon-name -a your-app-name --login-url https://test.salesforce.com
+```
+
+### 3. Authorize a User
+
+```bash
+# Authorize a Salesforce user for API access
+heroku salesforce:authorizations:add auth-user --addon your-addon-name -a your-app-name
+```
+
+### 4. Publish Your App
+
+```bash
+# Publish the app to Salesforce as an External Service
+heroku salesforce:publish api-spec.yaml \
+  --client-name MyAPI \
+  --connection-name production-org \
+  --authorization-connected-app-name MyAppConnectedApp \
+  --authorization-permission-set-name MyAppPermissions \
+  --addon your-addon-name
+```
+
+### 5. Required Salesforce Permissions
+Users need the "Manage Heroku AppLink" permission in Salesforce:
+1.  Go to Setup → Permission Sets
+2.  Create a new permission set or edit an existing one
+3.  Add "Manage Heroku AppLink" system permission
+4.  Assign the permission set to users
 
 ## Additional Resources
 
