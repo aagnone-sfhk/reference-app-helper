@@ -1,1 +1,1 @@
-web: export APP_PORT=3000 && heroku-applink-service-mesh-latest-amd64 --port $PORT -- uvicorn main:app --port=$APP_PORT
+web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
