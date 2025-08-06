@@ -3,4 +3,5 @@ __pycache__/
 .venv/
 venv/
 htmlcov/
+.coverage
 commit-message.txt

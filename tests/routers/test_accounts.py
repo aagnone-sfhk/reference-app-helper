@@ -13,7 +13,7 @@ async def test_get_accounts(client):
     context = sdk.get_client_context()
     context.data_api.query.return_value = MagicMock(records=[mock_record])
 
-    response = client.get("/accounts/")
+    response = client.get("/api/accounts/")
     
     assert response.status_code == 200
     assert response.json() == [{"id": "123", "name": "Test Account"}]

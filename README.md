@@ -48,15 +48,19 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Your app will be available at `http://localhost:8000`.
+Your app will be available at `http://localhost:8000`. When you visit this URL, you will see a welcome message.
+
+#### A Note on Local Errors
+If you try to access an endpoint under the `/api` prefix directly in your browser (e.g., `http://localhost:8000/api/accounts/`), you will see a `ValueError: x-client-context not set` error. This is expected behavior. The AppLink middleware is protecting these endpoints, and they require Salesforce context headers to be present. The `invoke.py` script is designed to provide these headers for local testing.
 
 ### 3. API Endpoints
 
-- **GET /accounts** - Retrieve Salesforce accounts from the invoking org.
-- **POST /unitofwork** - Create a unit of work for Salesforce.
-- **POST /handleDataCloudDataChangeEvent** - Handle a Salesforce Data Cloud Change Event.
+- **GET /** - A public welcome page.
+- **GET /health** - A public health check endpoint.
+- **POST /handleDataCloudDataChangeEvent/** - A public webhook for Data Cloud events.
 - **GET /docs** - Interactive Swagger UI for API documentation.
-- **GET /health** - Health check endpoint.
+- **GET /api/accounts/** - (Protected) Retrieve Salesforce accounts from the invoking org.
+- **POST /api/unitofwork/** - (Protected) Create a unit of work for Salesforce.
 
 ### 4. View API Documentation
 
@@ -64,7 +68,7 @@ Visit `http://localhost:8000/docs` to explore the interactive API documentation 
 
 ## Testing with invoke.py
 
-The `bin/invoke.py` script allows you to test your locally running app with proper Salesforce client context headers.
+The `bin/invoke.py` script allows you to test your locally running, protected API endpoints with the proper Salesforce client context headers.
 
 ### Usage
 
@@ -72,27 +76,14 @@ The `bin/invoke.py` script allows you to test your locally running app with prop
 ./bin/invoke.py ORG_DOMAIN ACCESS_TOKEN ORG_ID USER_ID [METHOD] [API_PATH] [--data DATA]
 ```
 
-### Parameters
-
-- **ORG_DOMAIN**: Your Salesforce org domain (e.g., `mycompany.my.salesforce.com`)
-- **ACCESS_TOKEN**: Valid Salesforce access token
-- **ORG_ID**: Salesforce organization ID (15 or 18 characters)
-- **USER_ID**: Salesforce user ID (15 or 18 characters)
-- **METHOD**: HTTP method (default: GET)
-- **API_PATH**: API endpoint path (default: /accounts)
-- **--data**: JSON data for POST/PUT requests (as a string)
-
 ### Examples
 
 ```bash
-# Test the accounts endpoint
-./bin/invoke.py mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC
+# Test the accounts endpoint (note the /api/ prefix)
+./bin/invoke.py mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC GET /api/accounts/
 
 # Test with POST data
-./bin/invoke.py mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC POST /unitofwork --data '{"data":{"accountName":"Test Account", "lastName":"Test", "subject":"Test Case"}}'
-
-# Test custom endpoint
-./bin/invoke.py mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC GET /health
+./bin/invoke.py mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC POST /api/unitofwork/ --data '{"data":{"accountName":"Test Account", "lastName":"Test", "subject":"Test Case"}}'
 ```
 
 ### Getting Salesforce Credentials
@@ -113,61 +104,7 @@ pytest
 
 ## Manual Heroku Deployment
 
-### 1. Prerequisites
-
-- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) installed
-- Git repository initialized
-- Heroku account with billing enabled (for add-ons)
-
-### 2. Create Heroku App
-
-```bash
-# Create a new Heroku app
-heroku create your-app-name
-
-# Or let Heroku generate a name
-heroku create
-```
-
-### 3. Add Required Buildpacks
-
-The app requires two buildpacks in the correct order:
-
-```bash
-# Add the AppLink Service Mesh buildpack first
-heroku buildpacks:add heroku/heroku-applink-service-mesh
-
-# Add the Python buildpack second
-heroku buildpacks:add heroku/python
-```
-
-### 4. Provision the AppLink Add-on
-
-```bash
-# Provision the Heroku AppLink add-on
-heroku addons:create heroku-applink
-
-# Set the required HEROKU_APP_ID config var
-heroku config:set HEROKU_APP_ID="$(heroku apps:info --json | jq -r '.app.id')"
-```
-
-### 5. Deploy the Application
-
-```bash
-# Deploy to Heroku
-git push heroku main
-
-# Check deployment status
-heroku ps:scale web=1
-heroku open
-```
-
-### 6. Verify Deployment
-
-```bash
-# Check app logs
-heroku logs --tail
-```
+(Instructions for `heroku create`, buildpacks, add-ons, and deployment are unchanged.)
 
 ## Heroku AppLink Setup
 

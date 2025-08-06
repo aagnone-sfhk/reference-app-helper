@@ -31,7 +31,7 @@ async def test_create_unit_of_work(client):
         }
     }
 
-    response = client.post("/unitofwork/", json=request_data)
+    response = client.post("/api/unitofwork/", json=request_data)
 
     assert response.status_code == 201
     assert response.json() == {"success": True}
@@ -64,7 +64,7 @@ async def test_create_unit_of_work_no_callback(client):
         }
     }
 
-    response = client.post("/unitofwork/", json=request_data)
+    response = client.post("/api/unitofwork/", json=request_data)
 
     assert response.status_code == 201
     assert response.json() == {"success": True}
@@ -92,7 +92,7 @@ async def test_create_unit_of_work_commit_fails(client):
 
     # The TestClient will not re-raise the HTTPException.
     # Instead, it will return a Response object with the 500 status code.
-    response = client.post("/unitofwork/", json=request_data)
+    response = client.post("/api/unitofwork/", json=request_data)
 
     assert response.status_code == 500
     assert "Commit failed!" in response.json()["detail"]

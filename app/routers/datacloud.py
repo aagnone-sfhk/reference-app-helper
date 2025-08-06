@@ -9,7 +9,6 @@ import heroku_applink as sdk
 import os
 
 router = APIRouter(
-    prefix="/handleDataCloudDataChangeEvent",
     tags=["datacloud"],
 )
 
@@ -28,7 +27,7 @@ class DataCloudRequest(BaseModel):
     events: List[DataCloudEvent]
     schemas: List[DataCloudSchema]
 
-@router.post("/", status_code=204)
+@router.post("/handleDataCloudDataChangeEvent/", status_code=204)
 async def handle_data_cloud_change_event(request: DataCloudRequest) -> None:
     """
     Handle Data Cloud Data Action events.

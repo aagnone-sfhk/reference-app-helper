@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 
 router = APIRouter(
-    prefix="/accounts",
     tags=["accounts"],
 )
 

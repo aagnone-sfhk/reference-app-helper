@@ -15,7 +15,7 @@ def main():
     parser.add_argument("org_id", help="Salesforce organization ID (15 or 18 characters)")
     parser.add_argument("user_id", help="Salesforce user ID (15 or 18 characters)")
     parser.add_argument("method", nargs="?", default="GET", help="HTTP method (default: GET)")
-    parser.add_argument("api_path", nargs="?", default="/accounts", help="API endpoint path (default: /accounts)")
+    parser.add_argument("api_path", nargs="?", default="/api/accounts/", help="API endpoint path (default: /api/accounts/)")
     parser.add_argument("--data", help="JSON data for POST/PUT requests")
 
     args = parser.parse_args()

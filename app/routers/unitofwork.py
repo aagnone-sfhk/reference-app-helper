@@ -8,7 +8,6 @@ from typing import Dict, Any, Optional
 import heroku_applink as sdk
 
 router = APIRouter(
-    prefix="/unitofwork",
     tags=["unitofwork"],
 )
 
