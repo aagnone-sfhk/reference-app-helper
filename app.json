@@ -18,7 +18,7 @@
       "plan": "heroku-applink"
     },
     {
-      "plan": "heroku-postgres:essential-0"
+      "plan": "heroku-postgresql:essential-0"
     },
     {
       "plan": "heroku-inference:claude-4-sonnet"
