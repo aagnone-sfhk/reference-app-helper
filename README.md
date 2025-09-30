@@ -1,10 +1,10 @@
-# Heroku AppLink RAG Demo
+# Agentforce Heroku Reference App Search
 
 <a href="https://deploy.herokuapps.ai?template=https://github.com/aagnone-sfhk/reference-app-helper">
     <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
 </a>
 
-A [FastAPI](https://fastapi.tiangolo.com/) web application that demonstrates RAG (Retrieval-Augmented Generation) for searching Heroku reference app documentation using vector embeddings and Heroku AppLink for Salesforce integration.
+A [FastAPI](https://fastapi.tiangolo.com/) web application that demonstrates RAG (Retrieval-Augmented Generation) for searching Heroku reference app documentation using vector embeddings and Heroku AppLink for easy integration with Salesforce & Agentforce.
 
 ## Table of Contents
 
