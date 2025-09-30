@@ -8,12 +8,14 @@ servers:
 x-sfdc:
   agent:
     topic:
-      classificationDescription: This topic enables analysis of Salesforce Data Cloud data and search on Heroku Postgres pgvector data.
-      scope: Your job is to assist users in analyzing Salesforce Data Cloud data and search on Heroku Postgres pgvector data.
+      classificationDescription: This topic enables semantic search across reference application repositories and code examples for Heroku, Salesforce, Agentforce, Data Cloud, and related integration patterns.
+      scope: Your job is to help developers find relevant code examples, implementation patterns, setup guides, and best practices from a curated collection of reference applications. These include Heroku integrations with Salesforce (AppLink patterns, API access, org actions/jobs), Data Cloud solutions, Agentforce agents, eventing patterns, and specialized applications (Streamlit, Jupyter, Docker deployments, RAG implementations, etc.).
       instructions:
-        - Use your actions to inspect the Data Cloud's data and search on Heroku Postgres pgvector data.
-        - Help the user understand the Data Cloud's data and search on Heroku Postgres pgvector data.
-        - NEVER update data or metadata.
+        - Use your search action to find relevant reference applications and code patterns based on the user's technical questions.
+        - Help users discover implementation examples for Heroku-Salesforce integrations, Data Cloud use cases, Agentforce agents, and deployment patterns.
+        - When users ask about specific technologies (e.g., "Node.js API access", "Java org actions", "RAG with LlamaIndex"), search for matching reference applications.
+        - Provide context from README files including setup instructions, architecture patterns, and integration approaches.
+        - NEVER update data or metadata - this is a read-only search system.
       name: applink_rag
 paths:
   /search:
@@ -33,17 +35,20 @@ paths:
             isUserInput: true
             isDisplayable: true
       description: |
-        Search indexed documents using RAG (Retrieval-Augmented Generation).
-        Performs semantic search over documents stored in PostgreSQL vector database
-        and generates a response using retrieved context.
+        Search reference application documentation using RAG (Retrieval-Augmented Generation).
+        Performs semantic search over README files from curated Heroku-Salesforce reference applications
+        stored in a PostgreSQL pgvector database. Returns contextual answers about implementation patterns,
+        setup instructions, integration approaches, and code examples for Heroku, Salesforce AppLink,
+        Agentforce, Data Cloud, eventing patterns, and specialized deployments (Streamlit, Jupyter, Docker, etc.).
+        Use this to help developers find relevant reference apps and understand integration patterns.
       parameters:
         - name: query
           in: query
           required: true
-          description: The search query or question
+          description: The search query or question about reference applications, integration patterns, or implementation guidance
           schema:
             type: string
-            example: What are the benefits of machine learning?
+            example: How do I implement API access from Heroku to Salesforce using Node.js?
         - name: top_k
           in: query
           required: false
@@ -162,11 +167,11 @@ components:
         query:
           type: string
           description: The original search query
-          example: What are the benefits of machine learning?
+          example: How do I implement API access from Heroku to Salesforce using Node.js?
         response:
           type: string
-          description: The generated answer based on retrieved documents
-          example: Machine learning provides several benefits including automated decision-making, pattern recognition, and predictive analytics...
+          description: The generated answer based on retrieved reference application documentation
+          example: To implement API access from Heroku to Salesforce using Node.js, refer to the 'heroku-applink-pattern-api-access-nodejs' reference application. It demonstrates using OAuth 2.0 JWT Bearer flow for authentication and making REST API calls to Salesforce...
         documents_count:
           type: integer
           description: Total number of documents in the index

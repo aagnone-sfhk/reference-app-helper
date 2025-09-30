@@ -194,6 +194,7 @@ assign_permissions() {
     
     # Assign the permission set to the Agentforce agent user
     sf org assign permset -o "$sf_org_alias" -n $permission_set_name -b "$agentforce_agent_user_email"
+    sf org assign permset -o "$sf_org_alias" -n $api_client_name -b "$agentforce_agent_user_email"
     echo "✅ Permission set assigned to Agentforce agent user"
 }
 
@@ -210,8 +211,7 @@ print_summary() {
     echo "🌐 Your app is available at: https://$heroku_app_name.herokuapp.com"
     echo ""
     echo "💡 Next steps:"
-    echo "   • Customize queries in src/lib/sql/queries.js for your Data Cloud org"
-    echo "   • Test the Data Cloud endpoints with your actual data"
+    echo "   • Create your service agent in Salesforce with the topic 'applink_rag'"
 }
 
 main() {
