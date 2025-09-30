@@ -128,7 +128,7 @@ def create_query_engine(
     return query_engine
 
 
-def query(query_engine, prompt: str) -> str:
+def query(query_engine, prompt: str) -> tuple[str, list[dict]]:
     """
     Execute a query against the document index.
     
@@ -137,13 +137,26 @@ def query(query_engine, prompt: str) -> str:
         prompt: The question or query to answer
     
     Returns:
-        The generated answer as a string
+        Tuple of (generated answer, list of source metadata dicts)
     
     Example:
         >>> engine = create_query_engine()
-        >>> answer = query(engine, "What is the main topic of the documents?")
+        >>> answer, sources = query(engine, "What is the main topic of the documents?")
         >>> print(answer)
+        >>> print(sources)
     """
     response = query_engine.query(prompt)
-    return str(response)
+    
+    # Extract metadata from source nodes
+    sources = []
+    if hasattr(response, 'source_nodes'):
+        for node in response.source_nodes:
+            source_info = {
+                "text": node.text[:200] + "..." if len(node.text) > 200 else node.text,
+                "score": float(node.score) if hasattr(node, 'score') else None,
+                "metadata": node.metadata if hasattr(node, 'metadata') else {}
+            }
+            sources.append(source_info)
+    
+    return str(response), sources
 

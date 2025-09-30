@@ -27,8 +27,8 @@ paths:
       x-sfdc:
         heroku:
           authorization:
-            connectedApp: 'HerokuSearch'
-            permissionSet: 'HerokuSearchPermSet'
+            connectedApp: 'HerokuSearchApp'
+            permissionSet: 'HerokuSearchAppPermSet'
         agent:
           action:
             publishAsAgentAction: true
@@ -52,12 +52,12 @@ paths:
         - name: top_k
           in: query
           required: false
-          description: Number of relevant document chunks to retrieve (1-20)
+          description: Number of relevant document chunks to retrieve (1-50)
           schema:
             type: integer
             minimum: 1
-            maximum: 20
-            default: 10
+            maximum: 50
+            default: 20
         - name: response_mode
           in: query
           required: false
@@ -105,8 +105,8 @@ paths:
       x-sfdc:
         heroku:
           authorization:
-            connectedApp: 'HerokuSearch'
-            permissionSet: 'HerokuSearchPermSet'
+            connectedApp: 'HerokuSearchApp'
+            permissionSet: 'HerokuSearchAppPermSet'
       responses:
         '200':
           description: Successfully returned a list of Accounts
@@ -130,8 +130,8 @@ paths:
       x-sfdc:
         heroku:
           authorization:
-            connectedApp: 'HerokuSearch'
-            permissionSet: 'HerokuSearchPermSet'
+            connectedApp: 'HerokuSearchApp'
+            permissionSet: 'HerokuSearchAppPermSet'
       requestBody:
         required: true
         content:
@@ -176,6 +176,47 @@ components:
           type: integer
           description: Total number of documents in the index
           example: 150
+        sources:
+          type: array
+          description: List of source document chunks used to generate the response
+          items:
+            $ref: '#/components/schemas/SourceMetadata'
+    SourceMetadata:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Preview of the source text chunk (first 200 characters)
+          example: "# Heroku AppLink Pattern - API Access (Node.js)\n\nThis reference application demonstrates how to implement API access from a Heroku app to Salesforce using OAuth 2.0 JWT Bearer flow. The pattern shows authentication..."
+        score:
+          type: number
+          nullable: true
+          description: Similarity score for this chunk (higher is more relevant)
+          example: 0.87
+        metadata:
+          type: object
+          description: Metadata about the source document
+          properties:
+            file_name:
+              type: string
+              description: Name of the source file
+              example: heroku-applink-pattern-api-access-nodejs_README.md
+            repo_name:
+              type: string
+              description: Repository name
+              example: heroku-applink-pattern-api-access-nodejs
+            repo_url:
+              type: string
+              description: URL to the repository
+              example: https://github.com/heroku-reference-apps/heroku-applink-pattern-api-access-nodejs
+            chunk_index:
+              type: integer
+              description: Index of this chunk within the document
+              example: 0
+            total_chunks:
+              type: integer
+              description: Total number of chunks for this document
+              example: 8
     Error:
       type: object
       properties:

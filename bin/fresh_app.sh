@@ -5,8 +5,8 @@ set -euo pipefail
 sf_org_alias=""
 agentforce_agent_user_email=""
 heroku_app_name=""
-api_client_name="HerokuSearch"
-permission_set_name="HerokuSearchPermSet"
+api_client_name="HerokuSearchApp"
+permission_set_name="HerokuSearchAppPermSet"
 
 usage() {
     cat << EOF

@@ -14,18 +14,26 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["search"])
 
 
+class SourceMetadata(BaseModel):
+    """Metadata for a source document chunk"""
+    text: str
+    score: float | None
+    metadata: dict
+
+
 class SearchResponse(BaseModel):
     """Response model for search endpoint"""
     query: str
     response: str
     documents_count: int
+    sources: list[SourceMetadata]
 
 
 @router.get("/search", response_model=SearchResponse, summary="Search documents using RAG")
 async def search_documents(
     query_text: str = Query(..., description="The search query string", alias="query"),
     top_k: int = Query(
-        10, description="Number of relevant document chunks to retrieve", ge=1, le=20),
+        20, description="Number of relevant document chunks to retrieve", ge=1, le=50),
     response_mode: str = Query(
         "tree_summarize",
         description="Response mode: tree_summarize, refine, compact, or simple_summarize"
@@ -39,7 +47,7 @@ async def search_documents(
 
     **Parameters:**
     - **query**: The search query or question
-    - **top_k**: Number of relevant document chunks to retrieve (1-20, default: 10)
+    - **top_k**: Number of relevant document chunks to retrieve (1-50, default: 20)
     - **response_mode**: How to combine chunks:
         - `tree_summarize`: Build a tree of summaries (default, best for comprehensive answers)
         - `refine`: Iteratively refine the answer
@@ -82,12 +90,13 @@ async def search_documents(
 
         # Perform the search using RAG
         logger.info(f"Querying documents with: '{query_text}'")
-        answer = query(engine, query_text)
+        answer, sources = query(engine, query_text)
 
         return SearchResponse(
             query=query_text,
             response=answer,
-            documents_count=doc_count if doc_count else 0
+            documents_count=doc_count if doc_count else 0,
+            sources=[SourceMetadata(**s) for s in sources]
         )
 
     except HTTPException:
