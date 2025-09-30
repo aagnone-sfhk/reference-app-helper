@@ -6,7 +6,7 @@ sf_org_alias=""
 agentforce_agent_user_email=""
 heroku_app_name=""
 api_client_name="HerokuSearch"
-permission_set_name="HerokuSearchPS"
+permission_set_name="HerokuSearchPermSet"
 
 usage() {
     cat << EOF
@@ -93,6 +93,13 @@ parse_arguments() {
 
     echo "✅ Using Salesforce org alias: $sf_org_alias"
     echo "✅ Using Agentforce agent email: $agentforce_agent_user_email"
+}
+
+enable_pgvector() {
+    echo ""
+    echo "🔍 Enabling pgvector extension..."
+    heroku pg:psql -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+    echo "✅ pgvector extension enabled"
 }
 
 detect_heroku_app() {
@@ -212,6 +219,7 @@ main() {
     echo "====================================="
     
     parse_arguments "$@"
+    enable_pgvector
     detect_heroku_app
     configure_app
     setup_salesforce_connections

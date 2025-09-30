@@ -1,0 +1,20 @@
+---
+description: Python Development Rules
+globs: **/*
+alwaysApply: true
+---
+
+## Package Management
+
+- Use `uv` for package management.
+- Use `uv add` and `uv remove` to change packages.
+
+## Config Vars
+
+Obtain config vars from Heroku using `heroku config -s > .env`.
+
+## Executing Code
+
+⚠️ If the .env file is not present, obtain config vars before executing code.
+
+Use `uv run --env-file .env` to execute code.
