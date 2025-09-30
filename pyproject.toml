@@ -1,0 +1,29 @@
+[project]
+name = "demo-applink-rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.109.2",
+    "uvicorn>=0.27.1",
+    "heroku-applink>=1.0.0",
+    "requests>=2.31.0",
+    "pyyaml>=6.0.1",
+    "llama-index>=0.13.1",
+    "llama-index-llms-heroku>=0.1.0",
+    "llama-index-vector-stores-postgres>=0.6.3",
+    "llama-index-embeddings-openai-like>=0.2.1",
+    "python-dotenv>=0.9.9",
+    "sqlalchemy>=2.0.43",
+    "psycopg2-binary>=2.9.10",
+    "pydantic-settings>=2.11.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio==0.23.6",
+    "pytest-mock>=3.12.0",
+    "pytest-cov>=1.0.0",
+]

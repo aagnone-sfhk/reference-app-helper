@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from typing import Dict
 import yaml
 
-from .routers import accounts, unitofwork, datacloud
+from .routers import accounts, unitofwork, datacloud, search
 
 # --- Protected Salesforce App ---
 # All routers and middleware that require Salesforce context are attached here.
@@ -34,6 +34,9 @@ app.mount("/api", sf_app)
 # The Data Cloud router is a webhook, so it's attached to the main app
 # without the Salesforce context middleware.
 app.include_router(datacloud.router)
+
+# The Search router provides RAG search capabilities
+app.include_router(search.router)
 
 # Load the OpenAPI spec and attach it to the main app
 with open("api-spec.yaml", "r") as f:

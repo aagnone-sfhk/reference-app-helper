@@ -5,7 +5,91 @@ info:
   description: Sample Heroku app exposing APIs to connected Salesforce and Data Cloud orgs.
 servers:
   - url: /
+x-sfdc:
+  agent:
+    topic:
+      classificationDescription: This topic enables analysis of Salesforce Data Cloud data and search on Heroku Postgres pgvector data.
+      scope: Your job is to assist users in analyzing Salesforce Data Cloud data and search on Heroku Postgres pgvector data.
+      instructions:
+        - Use your actions to inspect the Data Cloud's data and search on Heroku Postgres pgvector data.
+        - Help the user understand the Data Cloud's data and search on Heroku Postgres pgvector data.
+        - NEVER update data or metadata.
+      name: applink_rag
 paths:
+  /search:
+    get:
+      tags:
+        - search
+      summary: Search documents using RAG
+      operationId: SearchDocumentsGet
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'HerokuSearch'
+            permissionSet: 'HerokuSearchPermSet'
+        agent:
+          action:
+            publishAsAgentAction: true
+            isUserInput: true
+            isDisplayable: true
+      description: |
+        Search indexed documents using RAG (Retrieval-Augmented Generation).
+        Performs semantic search over documents stored in PostgreSQL vector database
+        and generates a response using retrieved context.
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: The search query or question
+          schema:
+            type: string
+            example: What are the benefits of machine learning?
+        - name: top_k
+          in: query
+          required: false
+          description: Number of relevant document chunks to retrieve (1-20)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 10
+        - name: response_mode
+          in: query
+          required: false
+          description: How to combine retrieved chunks into a response
+          schema:
+            type: string
+            enum:
+              - tree_summarize
+              - refine
+              - compact
+              - simple_summarize
+            default: tree_summarize
+      responses:
+        '200':
+          description: Successfully returned search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No documents found in the index
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Search failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/accounts/:
     get:
       tags:
@@ -16,8 +100,8 @@ paths:
       x-sfdc:
         heroku:
           authorization:
-            connectedApp: 'MyAppLinkConnectedApp'
-            permissionSet: 'MyAppLinkPermSet'
+            connectedApp: 'HerokuSearch'
+            permissionSet: 'HerokuSearchPermSet'
       responses:
         '200':
           description: Successfully returned a list of Accounts
@@ -41,8 +125,8 @@ paths:
       x-sfdc:
         heroku:
           authorization:
-            connectedApp: 'MyAppLinkConnectedApp'
-            permissionSet: 'MyAppLinkPermSet'
+            connectedApp: 'HerokuSearch'
+            permissionSet: 'HerokuSearchPermSet'
       requestBody:
         required: true
         content:
@@ -72,6 +156,28 @@ paths:
                   description: Your server returns this code if it accepts the callback
 components:
   schemas:
+    SearchResponse:
+      type: object
+      properties:
+        query:
+          type: string
+          description: The original search query
+          example: What are the benefits of machine learning?
+        response:
+          type: string
+          description: The generated answer based on retrieved documents
+          example: Machine learning provides several benefits including automated decision-making, pattern recognition, and predictive analytics...
+        documents_count:
+          type: integer
+          description: Total number of documents in the index
+          example: 150
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: No documents found in the index. Please load documents into the vector database first.
     Account:
       type: object
       properties:

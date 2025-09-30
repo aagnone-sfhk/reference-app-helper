@@ -92,6 +92,16 @@ To get the required Salesforce credentials for testing:
 2.  **Org ID**: Found in Setup → Company Information or by running `sf org a display --target-org <alias> --json | jq .result.id -r`.
 3.  **User ID**: Found in your user profile or Setup → Users or by running `sf org display --target-org <alias> --json | jq .result.userId -r`.
 
+### Finding Existing Agent Users
+
+To find existing agent users in your Salesforce org (useful for Agentforce integrations):
+
+```bash
+sf data query --query "SELECT Id, Name, Username FROM User WHERE UserType LIKE '%Agent%' OR Profile.Name LIKE '%Agent%'" --target-org <alias>
+```
+
+This will return all users with "Agent" in their UserType or Profile name, including Einstein Agent Users and site guest users.
+
 ## Running Automated Tests
 
 This project uses `pytest` for unit testing. To run the tests:
@@ -194,8 +204,8 @@ This final step publishes your API to Salesforce and creates the necessary compo
 heroku salesforce:publish api-spec.yaml \
   --client-name MyAPI \
   --connection-name CONNECTION_NAME \
-  --authorization-connected-app-name MyAppLinkConnectedApp \
-  --authorization-permission-set-name MyAppLinkPermSet \
+  --authorization-connected-app-name HerokuSearch \
+  --authorization-permission-set-name HerokuSearchPermSet \
   --addon YOUR_ADDON_NAME
 ```
 
