@@ -1,237 +1,205 @@
-# Heroku AppLink Python App Template
+# Heroku AppLink RAG Demo
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/heroku-reference-apps/applink-getting-started-python)
+<a href="https://deploy.herokuapps.ai?template=https://github.com/aagnone-sfhk/reference-app-helper">
+    <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
+</a>
 
-The Heroku AppLink Python app template is a [FastAPI](https://fastapi.tiangolo.com/) web application that demonstrates how to build APIs for Salesforce integration using Heroku AppLink. This template includes authentication, authorization, and API specifications for seamless integration with Salesforce and Data Cloud.
+A [FastAPI](https://fastapi.tiangolo.com/) web application that demonstrates RAG (Retrieval-Augmented Generation) for searching Heroku reference app documentation using vector embeddings and Heroku AppLink for Salesforce integration.
 
 ## Table of Contents
 
 - [Quick Start](#quick-start)
 - [Local Development](#local-development)
-- [Testing with invoke.py](#testing-with-invokepy)
-- [Running Automated Tests](#running-automated-tests)
-- [Manual Heroku Deployment](#manual-heroku-deployment)
-- [Heroku AppLink Setup](#heroku-applink-setup)
-- [Additional Resources](#additional-resources)
+- [API Endpoints](#api-endpoints)
+- [Configuration](#configuration)
+- [Testing](#testing)
+- [Deployment](#deployment)
 
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.8+
-- `pip` for package management
+- uv (package manager)
 - Git
 - Heroku CLI (for deployment)
+- Salesforce CLI (for setup)
 - Salesforce org (for AppLink integration)
 
-### Deploy to Heroku (One-Click)
+### Scripted Setup
 
-Click the Deploy button above to deploy this app directly to Heroku with the AppLink add-on pre-configured.
+**Recommended Workflow:**
+
+1. **Deploy via Heroku Button** (above) - This handles:
+   - App creation with proper buildpacks
+   - Heroku AppLink addon installation
+   - PostgreSQL database provisioning
+   - Initial code deployment
+
+2. **Clone your app locally:**
+
+   ```bash
+   heroku git:clone -a <your-app-name>
+   cd <your-app-name>
+   git remote add origin git@github.com:aagnone-sfhk/reference-app-helper.git
+   git pull origin main
+   ```
+
+3. **Configure Salesforce connections:**
+   ```bash
+   ./bin/fresh_app.sh <sf_org_alias>
+   ```
+
+**Example:**
+
+```bash
+./bin/fresh_app.sh acme
+```
+
+The configuration script adds:
+
+- Salesforce connections
+- API specification publishing to Salesforce
+- Permission set assignments for users
+- Local `.env` file for development
+
+### Manual Heroku Deployment
+
+If the automatic setup does not work, or you prefer to manually follow along, [follow this getting started guide](https://devcenter.heroku.com/articles/getting-started-heroku-applink).
 
 ## Local Development
 
-### 1. Clone and Install
+### Install and Run
 
 ```bash
-git clone https://github.com/heroku-reference-apps/applink-getting-started-python.git
-cd applink-getting-started-python
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+# Install dependencies
+uv sync
+
+# Get environment variables from Heroku
+heroku config -s > .env
+
+# Start development server
+uv run --env-file .env uvicorn app.main:app --reload
 ```
 
-### 2. Start the Development Server
+Your app will be available at `http://localhost:8000`.
+
+**Note:** Protected endpoints under `/api` require Salesforce context headers. Use `invoke.py` for local testing (see Configuration section).
+
+## API Endpoints
+
+- **GET /** - Welcome page
+- **GET /health** - Health check endpoint
+- **GET /docs** - Interactive Swagger UI documentation
+- **GET /api/accounts/** - (Protected) Retrieve Salesforce accounts
+- **POST /api/unitofwork/** - (Protected) Create a unit of work for Salesforce
+- **GET /api/search/** - (Protected) RAG-powered search of reference app documentation
+- **POST /handleDataCloudDataChangeEvent/** - Webhook for Data Cloud events
+
+## Configuration
+
+### Environment Variables
+
+- **DATABASE_URL**: PostgreSQL connection string (set automatically by Heroku)
+- **HEROKU_MIA_EMBEDDINGS_API_URL**: Heroku Managed Inference API URL
+- **HEROKU_MIA_EMBEDDINGS_API_KEY**: API key for embeddings
+- **HEROKU_MIA_EMBEDDINGS_COHERE_API_KEY**: Cohere API key for embeddings
+
+### Indexing Reference App READMEs
+
+After deployment, index the Heroku reference app documentation into the vector database:
 
 ```bash
-uvicorn app.main:app --reload
+# Ensure you have environment variables loaded
+heroku config -s > .env
+
+# Run the indexing script
+uv run --env-file .env python bin/index_ref_app_readmes.py
 ```
 
-Your app will be available at `http://localhost:8000`. When you visit this URL, you will see a welcome message.
+This script:
+- Downloads READMEs from all repositories in the heroku-reference-apps GitHub organization
+- Generates vector embeddings using Heroku Managed Inference and Cohere
+- Stores embeddings in PostgreSQL for RAG search functionality
 
-#### A Note on Local Errors
-If you try to access an endpoint under the `/api` prefix directly in your browser (e.g., `http://localhost:8000/api/accounts/`), you will see a `ValueError: x-client-context not set` error. This is expected behavior. The AppLink middleware is protecting these endpoints, and they require Salesforce context headers to be present. The `invoke.py` script is designed to provide these headers for local testing.
+### Local Testing with invoke.py
 
-### 3. API Endpoints
-
-- **GET /** - A public welcome page.
-- **GET /health** - A public health check endpoint.
-- **POST /handleDataCloudDataChangeEvent/** - A public webhook for Data Cloud events.
-- **GET /docs** - Interactive Swagger UI for API documentation.
-- **GET /api/accounts/** - (Protected) Retrieve Salesforce accounts from the invoking org.
-- **POST /api/unitofwork/** - (Protected) Create a unit of work for Salesforce.
-
-### 4. View API Documentation
-
-Visit `http://localhost:8000/docs` to explore the interactive API documentation powered by Swagger UI.
-
-## Testing with invoke.py
-
-The `bin/invoke.py` script allows you to test your locally running, protected API endpoints with the proper Salesforce client context headers.
-
-### Usage
+Test your locally running app with proper Salesforce client context:
 
 ```bash
-./bin/invoke.py ORG_DOMAIN ACCESS_TOKEN ORG_ID USER_ID [METHOD] [API_PATH] [--data DATA]
+# Set your credentials
+sf_org_alias=acme
+org_domain=$(sf org display -o $sf_org_alias --json | jq -r .result.instanceUrl | sed 's|https://||')
+access_token=$(sf org display -o $sf_org_alias --json | jq -r .result.accessToken)
+org_id=$(sf org display -o $sf_org_alias --json | jq -r .result.id)
+user_id=$(sf org display -o $sf_org_alias --json | jq -r .result.userId)
+
+# Test endpoints
+./bin/invoke.py $org_domain $access_token $org_id $user_id GET /api/accounts/
+./bin/invoke.py $org_domain $access_token $org_id $user_id GET "/api/search/?query=How do I deploy to Heroku"
 ```
 
-### Examples
+## Testing
+
+### Run All Tests
 
 ```bash
-# Test the accounts endpoint (note the /api/ prefix)
-./bin/invoke.py mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC GET /api/accounts/
-
-# Test with POST data
-./bin/invoke.py mycompany.my.salesforce.com TOKEN_123 00D123456789ABC 005123456789ABC POST /api/unitofwork/ --data '{"data":{"accountName":"Test Account", "lastName":"Test", "subject":"Test Case"}}'
+uv run --env-file .env pytest
 ```
 
-### Getting Salesforce Credentials
+### Test Coverage
 
-To get the required Salesforce credentials for testing:
+The application includes comprehensive tests for:
 
-1.  **Access Token**: Use Salesforce CLI to generate a session token (`sf org display --target-org <alias> --json | jq .result.accessToken -r`).
-2.  **Org ID**: Found in Setup → Company Information or by running `sf org a display --target-org <alias> --json | jq .result.id -r`.
-3.  **User ID**: Found in your user profile or Setup → Users or by running `sf org display --target-org <alias> --json | jq .result.userId -r`.
+- **Route handlers**: All API endpoints with various scenarios
+- **RAG functionality**: Vector search and embedding generation
+- **Error handling**: Missing headers, malformed requests
+- **Database operations**: Vector store and embedding persistence
 
-### Finding Existing Agent Users
+### Test Structure
 
-To find existing agent users in your Salesforce org (useful for Agentforce integrations):
-
-```bash
-sf data query --query "SELECT Id, Name, Username FROM User WHERE UserType LIKE '%Agent%' OR Profile.Name LIKE '%Agent%'" --target-org <alias>
+```
+tests/
+├── conftest.py                    # Test configuration and fixtures
+├── test_main.py                   # Main app tests
+└── routers/
+    ├── test_accounts.py           # Salesforce endpoints
+    ├── test_datacloud.py          # Data Cloud endpoints
+    ├── test_search.py             # RAG search endpoints
+    └── test_unitofwork.py         # Unit of work tests
 ```
 
-This will return all users with "Agent" in their UserType or Profile name, including Einstein Agent Users and site guest users.
+## Deployment
 
-## Running Automated Tests
+### Requirements
 
-This project uses `pytest` for unit testing. To run the tests:
-
-```bash
-pytest
-```
-
-## Manual Heroku Deployment
-
-### 1. Prerequisites
-
-- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) installed
+- Heroku CLI installed
 - Git repository initialized
 - Heroku account with billing enabled (for add-ons)
 
-### 2. Create Heroku App
+### Deploy Steps
 
 ```bash
-# Let Heroku generate a name for your app
+# Create app
 heroku create
-```
-Heroku will respond with the unique name for your new application (e.g., `salty-sierra-55555`). **Take note of this app name, as you will need it in later steps.**
 
-### 3. Add Required Buildpacks
-
-The app requires two buildpacks in the correct order:
-
-```bash
-# Add the AppLink Service Mesh buildpack first
+# Add buildpacks in order
 heroku buildpacks:add heroku/heroku-applink-service-mesh
-
-# Add the Python buildpack second
 heroku buildpacks:add heroku/python
-```
 
-### 4. Provision the AppLink Add-on
+# Provision add-ons
+heroku addons:create heroku-applink
+heroku addons:create heroku-postgresql
 
-```bash
-# Provision the Heroku AppLink add-on
-heroku addons:create heroku-applink --app YOUR_APP_NAME
-```
-Heroku will provision the add-on and give it a unique name (e.g., `applink-slippery-54321`). **You will need this name in the setup steps below.** If you forget it, you can find it by running `heroku addons`.
-
-### 5. Deploy the Application
-
-```bash
-# Deploy to Heroku
+# Deploy
 git push heroku main
 
-# Check deployment status
-heroku ps:scale web=1
-heroku open
-```
-
-### 6. Verify Deployment
-
-```bash
-# Check app logs
+# Verify
 heroku logs --tail
 ```
 
-## Heroku AppLink Setup
-
-In the following steps, you will need the **Heroku app name** (from step 2) and the **AppLink add-on name** (from step 4).
-
-### 1. Install AppLink CLI Plugin
-
-```bash
-# Install the AppLink CLI plugin
-heroku plugins:install @heroku-cli/plugin-applink
-```
-
-### 2. Connect to Salesforce Org
-
-This command securely connects your app to Salesforce. The `CONNECTION_NAME` is a friendly name **that you define yourself** to identify this link. You will reuse this name in the `publish` step.
-
-```bash
-# For a production or developer org. Replace CONNECTION_NAME with a name of your choice (e.g., "production_org").
-heroku salesforce:connect CONNECTION_NAME --addon YOUR_ADDON_NAME -a YOUR_APP_NAME
-
-# For a sandbox org
-heroku salesforce:connect CONNECTION_NAME --addon YOUR_ADDON_NAME -a YOUR_APP_NAME --login-url https://test.salesforce.com
-```
-This will open a browser for you to log in to Salesforce and approve the connection.
-
-### 3. Authorize a User
-
-```bash
-# Authorize a Salesforce user for API access
-heroku salesforce:authorizations:add auth-user --addon YOUR_ADDON_NAME -a YOUR_APP_NAME
-```
-
-### 4. Publish Your App
-
-This final step publishes your API to Salesforce and creates the necessary components.
-
-```bash
-# Publish the app to Salesforce as an External Service
-heroku salesforce:publish api-spec.yaml \
-  --client-name MyAPI \
-  --connection-name CONNECTION_NAME \
-  --authorization-connected-app-name HerokuSearch \
-  --authorization-permission-set-name HerokuSearchPermSet \
-  --addon YOUR_ADDON_NAME
-```
-
-**Parameter Breakdown:**
-- `--client-name`: The name for the External Service and its generated Apex classes (e.g., `MyAPI`).
-- `--connection-name`: The friendly name you gave the AppLink connection in the previous step (e.g., `production_org`).
-- `--authorization-connected-app-name`: The name for the **new** Connected App that Heroku will create. **Note:** This value must match the `connectedApp` value defined in `api-spec.yaml`.
-- `--authorization-permission-set-name`: The name for the **new** Permission Set that Heroku will create. **Note:** This value must match the `permissionSet` value defined in `api-spec.yaml`.
-- `--addon`: The unique name of your AppLink add-on (e.g., `applink-slippery-54321`).
-
-### 5. Required Salesforce Permissions
-
-Users need the "Manage Heroku AppLink" permission in Salesforce:
-1.  Go to Setup → Permission Sets
-2.  Create a new permission set or edit an existing one
-3.  Add "Manage Heroku AppLink" system permission
-4.  Assign the permission set to users
-
-## Additional Resources
-
-### Documentation
-
-- [Getting Started with Heroku AppLink](https://devcenter.heroku.com/articles/getting-started-heroku-applink)
-- [Heroku AppLink CLI Plugin](https://devcenter.heroku.com/articles/heroku-applink-cli)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+For detailed AppLink setup, see the [getting started guide](https://devcenter.heroku.com/articles/getting-started-heroku-applink).
 
 ---
 
-**Note**: This template is designed for educational purposes and as a starting point for building Salesforce-integrated applications. For production use, ensure proper error handling, security measures, and testing practices are implemented.
+**Note**: This application is designed for educational purposes and as a starting point for building Salesforce-integrated RAG applications. For production use, ensure proper error handling, security measures, and testing practices are implemented.

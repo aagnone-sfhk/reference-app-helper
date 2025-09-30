@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Download README files from all public repositories in the heroku-reference-apps GitHub organization
-and generate embeddings using Heroku MIA and Cohere.
+and index embeddings into a PostgreSQL vector database using Heroku MIA and Cohere.
 """
 
 import sys

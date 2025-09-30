@@ -1,0 +1,52 @@
+{
+  "name": "Heroku Reference App Search Helper",
+  "description": "Search helper for Heroku Reference Apps using Retrieval-Augmented Generation (RAG)",
+  "repository": "https://github.com/aagnone-sfhk/reference-app-helper",
+  "keywords": [
+    "python",
+    "fastapi",
+    "applink",
+    "salesforce",
+    "datacloud",
+    "swagger",
+    "rag",
+    "llm",
+    "heroku-reference-apps"
+  ],
+  "addons": [
+    {
+      "plan": "heroku-applink"
+    },
+    {
+      "plan": "heroku-postgres:essential-0"
+    },
+    {
+      "plan": "heroku-inference:claude-4-sonnet"
+    },
+    {
+      "plan": "heroku-inference:cohere-embed-multilingual",
+      "as": "EMBEDDING"
+    },
+    {
+      "plan": "logtail:free"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/heroku-applink-service-mesh"
+    },
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "DEPLOY_CONTEXT": {
+      "description": "Contextual info necessary for the initial deployment",
+      "required": true,
+      "value": ""
+    }
+  },
+  "scripts": {
+    "postdeploy": "curl --fail --location -X POST -H \"Content-Type: application/json\" -d \"{\\\"deploy_context\\\":\\\"${DEPLOY_CONTEXT}\\\",\\\"deployed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\"}\" \"https://deploy.herokuapps.ai/heroku-app-deploy-events\""
+  }
+}
