@@ -211,7 +211,7 @@ print_summary() {
     echo "🌐 Your app is available at: https://$heroku_app_name.herokuapp.com"
     echo ""
     echo "💡 Next steps:"
-    echo "   • Create your service agent in Salesforce with the topic 'applink_rag'"
+    echo "   • Create your service agent in Salesforce with the topic 'heroku_reference_app_search'"
 }
 
 main() {

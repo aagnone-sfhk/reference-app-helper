@@ -16,7 +16,7 @@ x-sfdc:
         - When users ask about specific technologies (e.g., "Node.js API access", "Java org actions", "RAG with LlamaIndex"), search for matching reference applications.
         - Provide context from README files including setup instructions, architecture patterns, and integration approaches.
         - NEVER update data or metadata - this is a read-only search system.
-      name: applink_rag
+      name: heroku_reference_app_search
 paths:
   /search:
     get:
