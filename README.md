@@ -1,4 +1,4 @@
-# Agentforce Heroku Reference App Search
+# Heroku Reference App Search
 
 <a href="https://deploy.herokuapps.ai?template=https://github.com/aagnone-sfhk/reference-app-helper">
     <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
